@@ -26,10 +26,10 @@ class MetaXmlParser : public HtmlParser {
     enum { NONE, KEYWORDS, TITLE, SAMPLE, AUTHOR } field;
   public:
     MetaXmlParser() : field(NONE) { }
-    void process_text(const string &text);
-    bool opening_tag(const string &tag);
-    bool closing_tag(const string &tag);
-    string title, keywords, sample, author;
+    void process_text(const std::string &text);
+    bool opening_tag(const std::string &tag);
+    bool closing_tag(const std::string &tag);
+    std::string title, keywords, sample, author;
 };
 
 #endif // OMEGA_INCLUDED_METAXMLPARSE_H

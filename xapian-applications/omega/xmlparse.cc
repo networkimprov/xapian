@@ -21,6 +21,8 @@
 
 #include "xmlparse.h"
 
+using namespace std;
+
 bool
 XmlParser::opening_tag(const string &)
 {

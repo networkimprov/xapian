@@ -22,6 +22,8 @@
 
 #include "xpsxmlparse.h"
 
+using namespace std;
+
 bool
 XpsXmlParser::opening_tag(const string &tag)
 {

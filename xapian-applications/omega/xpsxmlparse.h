@@ -26,8 +26,8 @@
 class XpsXmlParser : public HtmlParser {
   public:
     XpsXmlParser() { }
-    bool opening_tag(const string &tag);
-    string dump;
+    bool opening_tag(const std::string &tag);
+    std::string dump;
 };
 
 #endif // OMEGA_INCLUDED_XPSXMLPARSE_H

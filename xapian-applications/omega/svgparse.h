@@ -25,13 +25,13 @@
 
 class SvgParser : public HtmlParser {
     enum { OTHER, TEXT, METADATA, TITLE, KEYWORDS, AUTHOR } state;
-    string dc_tag;
+    std::string dc_tag;
   public:
     SvgParser() : state(OTHER) { }
-    void process_text(const string &text);
-    bool opening_tag(const string &tag);
-    bool closing_tag(const string &tag);
-    string title, keywords, dump, author;
+    void process_text(const std::string &text);
+    bool opening_tag(const std::string &tag);
+    bool closing_tag(const std::string &tag);
+    std::string title, keywords, dump, author;
 };
 
 #endif // OMEGA_INCLUDED_SVGPARSE_H

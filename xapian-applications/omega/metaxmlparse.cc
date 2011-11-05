@@ -21,6 +21,8 @@
 
 #include "metaxmlparse.h"
 
+using namespace std;
+
 void
 MetaXmlParser::process_text(const string &text)
 {

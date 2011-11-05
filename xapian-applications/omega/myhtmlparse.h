@@ -37,12 +37,12 @@ class MyHtmlParser : public HtmlParser {
 	bool indexing_allowed;
 	bool ignoring_metarobots;
 	bool charset_from_meta;
-	string title, sample, keywords, dump, author;
+	std::string title, sample, keywords, dump, author;
 
-	void process_text(const string &text);
-	bool opening_tag(const string &tag);
-	bool closing_tag(const string &tag);
-	void parse_html(const string &text, const string &charset_,
+	void process_text(const std::string &text);
+	bool opening_tag(const std::string &tag);
+	bool closing_tag(const std::string &tag);
+	void parse_html(const std::string &text, const std::string &charset_,
 			bool charset_from_meta_);
 	void ignore_metarobots() { ignoring_metarobots = true; }
 	MyHtmlParser() :

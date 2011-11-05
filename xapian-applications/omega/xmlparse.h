@@ -25,9 +25,9 @@
 class XmlParser : public MyHtmlParser {
   public:
     XmlParser() : MyHtmlParser() { }
-    bool opening_tag(const string &tag);
-    bool closing_tag(const string &tag);
-    void parse_html(const string &text) {
+    bool opening_tag(const std::string &tag);
+    bool closing_tag(const std::string &tag);
+    void parse_html(const std::string &text) {
 	// Ignore overriding charsets in meta tags.
 	MyHtmlParser::parse_html(text, "utf-8", true);
     }
