@@ -473,6 +473,11 @@ Mime2Text::Status Mime2Text::convert(const char* filepath, const char* type, Mim
             // Don't know how to index this type.
             return Status_TYPE;
         }
+
+        // Compute the MD5 of the file if we haven't already.
+        if (outFields->md5.empty() && md5_file(file, outFields->md5, true) == 0)
+            return Status_MD5;
+
     } catch (ReadError) {
         return Status_COMMAND;
     } catch (NoSuchFilter) {

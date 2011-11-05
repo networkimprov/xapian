@@ -45,6 +45,7 @@ public:
         Status_FILENAME,
         Status_FILTER,
         Status_COMMAND,
+        Status_MD5,
         Status_TMPDIR
     };
 
