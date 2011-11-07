@@ -42,6 +42,8 @@
 
 #include "mime2text.h"
 
+using Xapian::Mime2Text;
+
 Mime2Text::Mime2Text(bool noexcl, int sampsize)
 {
     ignore_exclusions = noexcl;

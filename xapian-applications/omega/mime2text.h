@@ -29,6 +29,8 @@
 #include <string>
 #include <map>
 
+namespace Xapian {
+
 class Mime2Text {
 public:
     Mime2Text(bool noexcl=false, int sampsize=512);
@@ -71,6 +73,7 @@ protected:
     std::map<std::string, std::string> commands;
 };
 
+}
 
 #endif // OMEGA_INCLUDED_MIME2TEXT_H
 

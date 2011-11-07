@@ -22,11 +22,16 @@
 
 #include "mime2text.h"
 
+using Xapian::Mime2Text;
+
 /* Dependencies (combine these into mime2text.a library)
  *
  * htmlparse.cc  md5.cc      metaxmlparse.cc  pkglibbindir.cc  svgparse.cc   utf8convert.cc  xpsxmlparse.cc
  * loadfile.cc   md5wrap.cc  mime2text.cc     myhtmlparse.cc   runfilter.cc  tmpdir.cc       xmlparse.cc
-*/
+ *
+ * External Dependencies (filters)
+ * FIXME add these
+ */
 
 int main() {
     Mime2Text converter;
