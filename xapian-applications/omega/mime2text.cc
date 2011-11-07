@@ -483,7 +483,8 @@ Mime2Text::Status Mime2Text::convert(const char* filepath, const char* type, Mim
     } catch (ReadError) {
         return Status_COMMAND;
     } catch (NoSuchFilter) {
-        commands[outFields->mimetype] = "";
+        // this would make the object non-thread-safe; let the caller do this
+        // commands[outFields->mimetype] = "";
         return Status_FILTER;
     } catch (const std::string& err) {
         outFields->command = err;
