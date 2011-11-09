@@ -270,7 +270,7 @@ Mime2Text::Status Mime2Text::convert(const char* filepath, const char* type, Mim
             std::string safefile = shell_protect(file);
             outFields->command = "pdftotext -enc UTF-8 " + safefile + " -";
             outFields->dump = stdout_to_string(outFields->command);
-            get_pdf_metainfo(safefile, outFields->author, outFields->title, outFields->keywords);
+            get_pdf_metainfo(safefile, outFields->command, outFields->author, outFields->title, outFields->keywords);
         } else if (outFields->mimetype == "application/postscript") {
             // There simply doesn't seem to be a Unicode capable PostScript to
             // text converter (e.g. pstotext always outputs ISO-8859-1).  The
@@ -289,11 +289,11 @@ Mime2Text::Status Mime2Text::convert(const char* filepath, const char* type, Mim
                 (void)stdout_to_string(outFields->command);
                 outFields->command = "pdftotext -enc UTF-8 " + safetmp + " -";
                 outFields->dump = stdout_to_string(outFields->command);
+                get_pdf_metainfo(safetmp, outFields->command, outFields->author, outFields->title, outFields->keywords);
             } catch (...) {
                 unlink(tmpfile.c_str());
                 throw;
             }
-            get_pdf_metainfo(safetmp, outFields->author, outFields->title, outFields->keywords);
             unlink(tmpfile.c_str());
         } else if (startswith(outFields->mimetype, "application/vnd.sun.xml.")
                 || startswith(outFields->mimetype, "application/vnd.oasis.opendocument.")) {
@@ -574,10 +574,11 @@ void Mime2Text::parse_pdfinfo_field(const char * p, const char * end, std::strin
 #define PARSE_PDFINFO_FIELD(P, END, OUT, FIELD) \
     parse_pdfinfo_field((P), (END), (OUT), FIELD":", CONST_STRLEN(FIELD) + 1)
 
-void Mime2Text::get_pdf_metainfo(const std::string & safefile, std::string &author, std::string &title, std::string &keywords)
+void Mime2Text::get_pdf_metainfo(const std::string& safefile, std::string& command, std::string& author, std::string& title, std::string& keywords)
 {
+    command = "pdfinfo -enc UTF-8 " + safefile;
     try {
-        std::string pdfinfo = stdout_to_string("pdfinfo -enc UTF-8 " + safefile);
+        std::string pdfinfo = stdout_to_string(command);
 
         const char * p = pdfinfo.data();
         const char * end = p + pdfinfo.size();
