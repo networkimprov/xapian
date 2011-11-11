@@ -198,36 +198,36 @@ Mime2Text::Mime2Text(bool noexcl, int sampsize)
     commands["image/vnd.djvu"] = "djvutxt ";
 }
 
-Mime2Text::Status Mime2Text::convert(const char* filepath, const char* type, Mime2Text::Fields* outFields)
+Mime2Text::Status Mime2Text::convert(const char* filepath, const char* type, Mime2Text::Fields* out_fields)
 {
     if (!type) {
         type = strrchr(filepath, '.');
         if (!type)
             return Status_TYPE;
     }
-    outFields->mimetype = type+(*type == '.');
-    for (std::string::iterator a = outFields->mimetype.begin(); a != outFields->mimetype.end(); ++a)
+    out_fields->mimetype = type+(*type == '.');
+    for (std::string::iterator a = out_fields->mimetype.begin(); a != out_fields->mimetype.end(); ++a)
         *a = tolower(*a);
     if (*type == '.') {
-        std::map<std::string,std::string>::const_iterator aMapRow = mime_map.find(outFields->mimetype);
+        std::map<std::string,std::string>::const_iterator aMapRow = mime_map.find(out_fields->mimetype);
         if (aMapRow == mime_map.end())
             return Status_TYPE;
-        outFields->mimetype = aMapRow->second;
+        out_fields->mimetype = aMapRow->second;
     }
-    if (outFields->mimetype == "ignore")
+    if (out_fields->mimetype == "ignore")
         return Status_IGNORE;
 
     try {
         std::string file(filepath);
-        std::map<std::string, std::string>::const_iterator cmd_it = commands.find(outFields->mimetype);
+        std::map<std::string, std::string>::const_iterator cmd_it = commands.find(out_fields->mimetype);
         if (cmd_it != commands.end()) {
             // Easy "run a command and read UTF-8 text from stdout" cases.
-            outFields->command = cmd_it->second;
-            if (outFields->command.empty())
+            out_fields->command = cmd_it->second;
+            if (out_fields->command.empty())
                 return Status_FILTER;
-            outFields->command += shell_protect(file);
-            outFields->dump = stdout_to_string(outFields->command);
-        } else if (outFields->mimetype == "text/html") {
+            out_fields->command += shell_protect(file);
+            out_fields->dump = stdout_to_string(out_fields->command);
+        } else if (out_fields->mimetype == "text/html") {
             std::string text = file_to_string(file);
             MyHtmlParser p;
             if (ignore_exclusions) p.ignore_metarobots();
@@ -242,36 +242,36 @@ Mime2Text::Status Mime2Text::convert(const char* filepath, const char* type, Mim
             }
             if (!p.indexing_allowed)
                 return Status_METATAG;
-            outFields->dump = p.dump;
-            outFields->title = p.title;
-            outFields->keywords = p.keywords;
-            outFields->sample = p.sample;
-            outFields->author = p.author;
-            md5_string(text, outFields->md5);
-        } else if (outFields->mimetype == "text/plain") {
+            out_fields->dump = p.dump;
+            out_fields->title = p.title;
+            out_fields->keywords = p.keywords;
+            out_fields->sample = p.sample;
+            out_fields->author = p.author;
+            md5_string(text, out_fields->md5);
+        } else if (out_fields->mimetype == "text/plain") {
             // Currently we assume that text files are UTF-8 unless they have a
             // byte-order mark.
-            outFields->dump = file_to_string(file);
-            md5_string(outFields->dump, outFields->md5);
+            out_fields->dump = file_to_string(file);
+            md5_string(out_fields->dump, out_fields->md5);
             // Look for Byte-Order Mark (BOM).
-            if (startswith(outFields->dump, "\xfe\xff") || startswith(outFields->dump, "\xff\xfe")) {
+            if (startswith(out_fields->dump, "\xfe\xff") || startswith(out_fields->dump, "\xff\xfe")) {
                 // UTF-16 in big-endian/little-endian order - we just convert
                 // it as "UTF-16" and let the conversion handle the BOM as that
                 // way we avoid the copying overhead of erasing 2 bytes from
                 // the start of dump.
-                convert_to_utf8(outFields->dump, "UTF-16");
-            } else if (startswith(outFields->dump, "\xef\xbb\xbf")) {
+                convert_to_utf8(out_fields->dump, "UTF-16");
+            } else if (startswith(out_fields->dump, "\xef\xbb\xbf")) {
                 // UTF-8 with stupid Windows not-the-byte-order mark.
-                outFields->dump.erase(0, 3);
+                out_fields->dump.erase(0, 3);
             } else {
                 // FIXME: What charset is the file?  Look at contents?
             }
-        } else if (outFields->mimetype == "application/pdf") {
+        } else if (out_fields->mimetype == "application/pdf") {
             std::string safefile = shell_protect(file);
-            outFields->command = "pdftotext -enc UTF-8 " + safefile + " -";
-            outFields->dump = stdout_to_string(outFields->command);
-            get_pdf_metainfo(safefile, outFields->command, outFields->author, outFields->title, outFields->keywords);
-        } else if (outFields->mimetype == "application/postscript") {
+            out_fields->command = "pdftotext -enc UTF-8 " + safefile + " -";
+            out_fields->dump = stdout_to_string(out_fields->command);
+            get_pdf_metainfo(safefile, out_fields->command, out_fields->author, out_fields->title, out_fields->keywords);
+        } else if (out_fields->mimetype == "application/postscript") {
             // There simply doesn't seem to be a Unicode capable PostScript to
             // text converter (e.g. pstotext always outputs ISO-8859-1).  The
             // only solution seems to be to convert via PDF using ps2pdf and
@@ -284,42 +284,42 @@ Mime2Text::Status Mime2Text::convert(const char* filepath, const char* type, Mim
                 return Status_TMPDIR;
             tmpfile += "/tmp.pdf";
             std::string safetmp = shell_protect(tmpfile);
-            outFields->command = "ps2pdf " + shell_protect(file) + " " + safetmp;
+            out_fields->command = "ps2pdf " + shell_protect(file) + " " + safetmp;
             try {
-                (void)stdout_to_string(outFields->command);
-                outFields->command = "pdftotext -enc UTF-8 " + safetmp + " -";
-                outFields->dump = stdout_to_string(outFields->command);
-                get_pdf_metainfo(safetmp, outFields->command, outFields->author, outFields->title, outFields->keywords);
+                (void)stdout_to_string(out_fields->command);
+                out_fields->command = "pdftotext -enc UTF-8 " + safetmp + " -";
+                out_fields->dump = stdout_to_string(out_fields->command);
+                get_pdf_metainfo(safetmp, out_fields->command, out_fields->author, out_fields->title, out_fields->keywords);
             } catch (...) {
                 unlink(tmpfile.c_str());
                 throw;
             }
             unlink(tmpfile.c_str());
-        } else if (startswith(outFields->mimetype, "application/vnd.sun.xml.")
-                || startswith(outFields->mimetype, "application/vnd.oasis.opendocument.")) {
+        } else if (startswith(out_fields->mimetype, "application/vnd.sun.xml.")
+                || startswith(out_fields->mimetype, "application/vnd.oasis.opendocument.")) {
             // Inspired by http://mjr.towers.org.uk/comp/sxw2text
             std::string safefile = shell_protect(file);
-            outFields->command = "unzip -p " + safefile + " content.xml styles.xml";
+            out_fields->command = "unzip -p " + safefile + " content.xml styles.xml";
             XmlParser xmlparser;
-            xmlparser.parse_html(stdout_to_string(outFields->command));
-            outFields->dump = xmlparser.dump;
-            outFields->command = "unzip -p " + safefile + " meta.xml";
+            xmlparser.parse_html(stdout_to_string(out_fields->command));
+            out_fields->dump = xmlparser.dump;
+            out_fields->command = "unzip -p " + safefile + " meta.xml";
             try {
                 MetaXmlParser metaxmlparser;
-                metaxmlparser.parse_html(stdout_to_string(outFields->command));
-                outFields->title = metaxmlparser.title;
-                outFields->keywords = metaxmlparser.keywords;
-                outFields->sample = metaxmlparser.sample;
-                outFields->author = metaxmlparser.author;
+                metaxmlparser.parse_html(stdout_to_string(out_fields->command));
+                out_fields->title = metaxmlparser.title;
+                out_fields->keywords = metaxmlparser.keywords;
+                out_fields->sample = metaxmlparser.sample;
+                out_fields->author = metaxmlparser.author;
             } catch (ReadError) {
                 // It's probably best to index the document even if this fails.
             }
-        } else if (outFields->mimetype == "application/vnd.ms-excel") {
-            outFields->command = "xls2csv -c' ' -q0 -dutf-8 " + shell_protect(file);
-            outFields->dump = stdout_to_string(outFields->command);
-        } else if (startswith(outFields->mimetype, "application/vnd.openxmlformats-officedocument.")) {
+        } else if (out_fields->mimetype == "application/vnd.ms-excel") {
+            out_fields->command = "xls2csv -c' ' -q0 -dutf-8 " + shell_protect(file);
+            out_fields->dump = stdout_to_string(out_fields->command);
+        } else if (startswith(out_fields->mimetype, "application/vnd.openxmlformats-officedocument.")) {
             const char * args = NULL;
-            std::string tail(outFields->mimetype, 46);
+            std::string tail(out_fields->mimetype, 46);
             if (startswith(tail, "wordprocessingml.")) {
                 // unzip returns exit code 11 if a file to extract wasn't found
                 // which we want to ignore, because there may be no headers or
@@ -337,139 +337,139 @@ Mime2Text::Status Mime2Text::convert(const char* filepath, const char* type, Mim
                 return Status_TYPE;
             }
             std::string safefile = shell_protect(file);
-            outFields->command = "unzip -p " + safefile + args;
+            out_fields->command = "unzip -p " + safefile + args;
             XmlParser xmlparser;
-            xmlparser.parse_html(stdout_to_string(outFields->command));
-            outFields->dump = xmlparser.dump;
-            outFields->command = "unzip -p " + safefile + " docProps/core.xml";
+            xmlparser.parse_html(stdout_to_string(out_fields->command));
+            out_fields->dump = xmlparser.dump;
+            out_fields->command = "unzip -p " + safefile + " docProps/core.xml";
             try {
                 MetaXmlParser metaxmlparser;
-                metaxmlparser.parse_html(stdout_to_string(outFields->command));
-                outFields->title = metaxmlparser.title;
-                outFields->keywords = metaxmlparser.keywords;
-                outFields->sample = metaxmlparser.sample;
-                outFields->author = metaxmlparser.author;
+                metaxmlparser.parse_html(stdout_to_string(out_fields->command));
+                out_fields->title = metaxmlparser.title;
+                out_fields->keywords = metaxmlparser.keywords;
+                out_fields->sample = metaxmlparser.sample;
+                out_fields->author = metaxmlparser.author;
             } catch (ReadError) {
                 // It's probably best to index the document even if this fails.
             }
-        } else if (outFields->mimetype == "application/x-abiword") {
+        } else if (out_fields->mimetype == "application/x-abiword") {
             // FIXME: Implement support for metadata.
             XmlParser xmlparser;
             std::string text = file_to_string(file);
             xmlparser.parse_html(text);
-            outFields->dump = xmlparser.dump;
-            md5_string(text, outFields->md5);
-        } else if (outFields->mimetype == "application/x-abiword-compressed") {
+            out_fields->dump = xmlparser.dump;
+            md5_string(text, out_fields->md5);
+        } else if (out_fields->mimetype == "application/x-abiword-compressed") {
             // FIXME: Implement support for metadata.
-            outFields->command = "gzip -dc " + shell_protect(file);
+            out_fields->command = "gzip -dc " + shell_protect(file);
             XmlParser xmlparser;
-            xmlparser.parse_html(stdout_to_string(outFields->command));
-            outFields->dump = xmlparser.dump;
-        } else if (outFields->mimetype == "text/rtf") {
+            xmlparser.parse_html(stdout_to_string(out_fields->command));
+            out_fields->dump = xmlparser.dump;
+        } else if (out_fields->mimetype == "text/rtf") {
             // The --text option unhelpfully converts all non-ASCII characters
             // to "?" so we use --html instead, which produces HTML entities.
-            outFields->command = "unrtf --nopict --html 2>/dev/null " + shell_protect(file);
+            out_fields->command = "unrtf --nopict --html 2>/dev/null " + shell_protect(file);
             MyHtmlParser p;
             p.ignore_metarobots();
             // No point going looking for charset overrides as unrtf doesn't produce them.
-            p.parse_html(stdout_to_string(outFields->command), "iso-8859-1", true);
-            outFields->dump = p.dump;
-            outFields->title = p.title;
-            outFields->keywords = p.keywords;
-            outFields->sample = p.sample;
-        } else if (outFields->mimetype == "text/x-perl") {
+            p.parse_html(stdout_to_string(out_fields->command), "iso-8859-1", true);
+            out_fields->dump = p.dump;
+            out_fields->title = p.title;
+            out_fields->keywords = p.keywords;
+            out_fields->sample = p.sample;
+        } else if (out_fields->mimetype == "text/x-perl") {
             // pod2text's output character set doesn't seem to be documented,
             // but from inspecting the source it looks like it's probably iso-8859-1.
-            outFields->command = "pod2text " + shell_protect(file);
-            outFields->dump = stdout_to_string(outFields->command);
-            convert_to_utf8(outFields->dump, "ISO-8859-1");
-        } else if (outFields->mimetype == "application/x-dvi") {
+            out_fields->command = "pod2text " + shell_protect(file);
+            out_fields->dump = stdout_to_string(out_fields->command);
+            convert_to_utf8(out_fields->dump, "ISO-8859-1");
+        } else if (out_fields->mimetype == "application/x-dvi") {
             // FIXME: -e0 means "UTF-8", but that results in "fi", "ff", "ffi",
             // etc appearing as single ligatures.  For European languages, it's
             // actually better to use -e2 (ISO-8859-1) and then convert, so
             // let's do that for now until we handle Unicode "compatibility decompositions".
-            outFields->command = "catdvi -e2 -s " + shell_protect(file);
-            outFields->dump = stdout_to_string(outFields->command);
-            convert_to_utf8(outFields->dump, "ISO-8859-1");
-        } else if (outFields->mimetype == "application/vnd.ms-xpsdocument") {
+            out_fields->command = "catdvi -e2 -s " + shell_protect(file);
+            out_fields->dump = stdout_to_string(out_fields->command);
+            convert_to_utf8(out_fields->dump, "ISO-8859-1");
+        } else if (out_fields->mimetype == "application/vnd.ms-xpsdocument") {
             std::string safefile = shell_protect(file);
-            outFields->command = "unzip -p " + safefile + " Documents/1/Pages/\\*.fpage";
+            out_fields->command = "unzip -p " + safefile + " Documents/1/Pages/\\*.fpage";
             XpsXmlParser xpsparser;
-            outFields->dump = stdout_to_string(outFields->command);
+            out_fields->dump = stdout_to_string(out_fields->command);
             // Look for Byte-Order Mark (BOM).
-            if (startswith(outFields->dump, "\xfe\xff") || startswith(outFields->dump, "\xff\xfe")) {
+            if (startswith(out_fields->dump, "\xfe\xff") || startswith(out_fields->dump, "\xff\xfe")) {
                 // UTF-16 in big-endian/little-endian order - we just
                 // convert it as "UTF-16" and let the conversion handle the
                 // BOM as that way we avoid the copying overhead of erasing
                 // 2 bytes from the start of dump.
-                convert_to_utf8(outFields->dump, "UTF-16");
+                convert_to_utf8(out_fields->dump, "UTF-16");
             }
-            xpsparser.parse_html(outFields->dump);
-            outFields->dump = xpsparser.dump;
-        } else if (outFields->mimetype == "text/csv") {
+            xpsparser.parse_html(out_fields->dump);
+            out_fields->dump = xpsparser.dump;
+        } else if (out_fields->mimetype == "text/csv") {
             // Currently we assume that text files are UTF-8 unless they have a
             // byte-order mark.
-            outFields->dump = file_to_string(file);
-            md5_string(outFields->dump, outFields->md5);
+            out_fields->dump = file_to_string(file);
+            md5_string(out_fields->dump, out_fields->md5);
             // Look for Byte-Order Mark (BOM).
-            if (startswith(outFields->dump, "\xfe\xff") || startswith(outFields->dump, "\xff\xfe")) {
+            if (startswith(out_fields->dump, "\xfe\xff") || startswith(out_fields->dump, "\xff\xfe")) {
                 // UTF-16 in big-endian/little-endian order - we just convert
                 // it as "UTF-16" and let the conversion handle the BOM as that
                 // way we avoid the copying overhead of erasing 2 bytes from
                 // the start of dump.
-                convert_to_utf8(outFields->dump, "UTF-16");
-            } else if (startswith(outFields->dump, "\xef\xbb\xbf")) {
+                convert_to_utf8(out_fields->dump, "UTF-16");
+            } else if (startswith(out_fields->dump, "\xef\xbb\xbf")) {
                 // UTF-8 with stupid Windows not-the-byte-order mark.
-                outFields->dump.erase(0, 3);
+                out_fields->dump.erase(0, 3);
             } else {
                 // FIXME: What charset is the file?  Look at contents?
             }
-            generate_sample_from_csv(outFields->dump, outFields->sample);
-        } else if (outFields->mimetype == "application/vnd.ms-outlook") {
-            outFields->command = get_pkglibbindir() + "/outlookmsg2html " + shell_protect(file);
+            generate_sample_from_csv(out_fields->dump, out_fields->sample);
+        } else if (out_fields->mimetype == "application/vnd.ms-outlook") {
+            out_fields->command = get_pkglibbindir() + "/outlookmsg2html " + shell_protect(file);
             MyHtmlParser p;
             p.ignore_metarobots();
-            outFields->dump = stdout_to_string(outFields->command);
+            out_fields->dump = stdout_to_string(out_fields->command);
             try {
                 // FIXME: what should the default charset be?
-                p.parse_html(outFields->dump, "iso-8859-1", false);
+                p.parse_html(out_fields->dump, "iso-8859-1", false);
             } catch (const std::string & newcharset) {
                 p.reset();
                 p.ignore_metarobots();
-                p.parse_html(outFields->dump, newcharset, true);
+                p.parse_html(out_fields->dump, newcharset, true);
             }
-            outFields->dump = p.dump;
-            outFields->title = p.title;
-            outFields->keywords = p.keywords;
-            outFields->sample = p.sample;
-            outFields->author = p.author;
-        } else if (outFields->mimetype == "image/svg+xml") {
+            out_fields->dump = p.dump;
+            out_fields->title = p.title;
+            out_fields->keywords = p.keywords;
+            out_fields->sample = p.sample;
+            out_fields->author = p.author;
+        } else if (out_fields->mimetype == "image/svg+xml") {
             SvgParser svgparser;
             svgparser.parse_html(file_to_string(file));
-            outFields->dump = svgparser.dump;
-            outFields->title = svgparser.title;
-            outFields->keywords = svgparser.keywords;
-            outFields->author = svgparser.author;
-        } else if (outFields->mimetype == "application/x-debian-package") {
-            outFields->command = "dpkg-deb -f ";
-            outFields->command += shell_protect(file);
-            outFields->command += " Description";
-            const std::string & desc = stdout_to_string(outFields->command);
+            out_fields->dump = svgparser.dump;
+            out_fields->title = svgparser.title;
+            out_fields->keywords = svgparser.keywords;
+            out_fields->author = svgparser.author;
+        } else if (out_fields->mimetype == "application/x-debian-package") {
+            out_fields->command = "dpkg-deb -f ";
+            out_fields->command += shell_protect(file);
+            out_fields->command += " Description";
+            const std::string & desc = stdout_to_string(out_fields->command);
             // First line is short description, which we use as the title.
             std::string::size_type idx = desc.find('\n');
-            outFields->title.assign(desc, 0, idx);
+            out_fields->title.assign(desc, 0, idx);
             if (idx != std::string::npos) {
-                outFields->dump.assign(desc, idx + 1, std::string::npos);
+                out_fields->dump.assign(desc, idx + 1, std::string::npos);
             }
-        } else if (outFields->mimetype == "application/x-redhat-package-manager") {
-            outFields->command = "rpm -q --qf '%{SUMMARY}\\n%{DESCRIPTION}' -p ";
-            outFields->command += shell_protect(file);
-            const std::string & desc = stdout_to_string(outFields->command);
+        } else if (out_fields->mimetype == "application/x-redhat-package-manager") {
+            out_fields->command = "rpm -q --qf '%{SUMMARY}\\n%{DESCRIPTION}' -p ";
+            out_fields->command += shell_protect(file);
+            const std::string & desc = stdout_to_string(out_fields->command);
             // First line is summary, which we use as the title.
             std::string::size_type idx = desc.find('\n');
-            outFields->title.assign(desc, 0, idx);
+            out_fields->title.assign(desc, 0, idx);
             if (idx != std::string::npos) {
-                outFields->dump.assign(desc, idx + 1, std::string::npos);
+                out_fields->dump.assign(desc, idx + 1, std::string::npos);
             }
         } else {
             // Don't know how to index this type.
@@ -477,17 +477,17 @@ Mime2Text::Status Mime2Text::convert(const char* filepath, const char* type, Mim
         }
 
         // Compute the MD5 of the file if we haven't already.
-        if (outFields->md5.empty() && md5_file(file, outFields->md5, true) == 0)
+        if (out_fields->md5.empty() && md5_file(file, out_fields->md5, true) == 0)
             return Status_MD5;
 
     } catch (ReadError) {
         return Status_COMMAND;
     } catch (NoSuchFilter) {
         // this would make the object non-thread-safe; let the caller do this
-        // commands[outFields->mimetype] = "";
+        // commands[out_fields->mimetype] = "";
         return Status_FILTER;
     } catch (const std::string& err) {
-        outFields->command = err;
+        out_fields->command = err;
         return Status_FILENAME;
     }
     return Status_OK;

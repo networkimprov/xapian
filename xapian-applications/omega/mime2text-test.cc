@@ -24,10 +24,12 @@
 
 using Xapian::Mime2Text;
 
-/* Dependencies (combine these into mime2text.a library)
+/* Building
  *
- * htmlparse.cc  md5.cc      metaxmlparse.cc  pkglibbindir.cc  svgparse.cc   utf8convert.cc  xpsxmlparse.cc
- * loadfile.cc   md5wrap.cc  mime2text.cc     myhtmlparse.cc   runfilter.cc  tmpdir.cc       xmlparse.cc
+ * ar rcs libmime2text.a \
+ *   htmlparse.o  md5.o      metaxmlparse.o  pkglibbindir.o  svgparse.o   utf8convert.o  xpsxmlparse.o \
+ *   loadfile.o   md5wrap.o  mime2text.o     myhtmlparse.o   runfilter.o  tmpdir.o       xmlparse.o
+ * g++ -o mime2text-test mime2text-test.cc libmime2text.a -lxapian
  *
  * External Dependencies (filters)
  * FIXME add these
@@ -40,14 +42,14 @@ int main() {
     Mime2Text::Status aStat = converter.convert("./mime-test.html", NULL, &aFields);
 
     std::cout << aStat
-    << " author " << aFields.author
-    << " title " << aFields.title
-    << " sample " << aFields.sample
-    << " keywords " << aFields.keywords
-    << " dump " << aFields.dump
-    //<< " md5 " << aFields.md5
-    << " mimetype " << aFields.mimetype
-    << " command " << aFields.command
+    << " author "   << aFields.get_author()
+    << " title "    << aFields.get_title()
+    << " sample "   << aFields.get_sample()
+    << " keywords " << aFields.get_keywords()
+    << " dump "     << aFields.get_body()
+    //<< " md5 "      << aFields.get_md5()
+    << " mimetype " << aFields.get_mimetype()
+    << " command "  << aFields.get_command()
     << std::endl;
 
     return 0;
