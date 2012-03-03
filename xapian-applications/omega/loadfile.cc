@@ -87,7 +87,7 @@ load_file(const string &file_name, size_t max_to_read, int flags,
 	return false;
     }
 
-    char blk[4096];
+    char blk[32*1024];
     size_t n = st.st_size;
     truncated = (max_to_read && max_to_read < n);
     if (truncated) {
@@ -97,20 +97,22 @@ load_file(const string &file_name, size_t max_to_read, int flags,
 
     output.resize(0);
     output.reserve(n);
+    size_t pos = 0;
     while (n) {
 	int c = read(fd, blk, min(n, sizeof(blk)));
 	if (c <= 0) {
 	    if (c < 0 && errno == EINTR) continue;
 	    break;
 	}
+#ifdef HAVE_POSIX_FADVISE
+	if (flags & NOCACHE)
+	    posix_fadvise(fd, pos, c, POSIX_FADV_DONTNEED);
+#endif
 	output.append(blk, c);
 	n -= c;
+	pos += c;
     }
 
-#ifdef HAVE_POSIX_FADVISE
-    if (flags & NOCACHE)
-	posix_fadvise(fd, 0, 0, POSIX_FADV_DONTNEED);
-#endif
 
     close(fd);
 
